@@ -83,14 +83,17 @@ public class MongoDBScriptCallOperation implements CallOperation {
 			result = db.runCommand(command).toJson();
 
 			jsonResult = new JSONObject(result);
-
-			if (jsonResult.has("retval") && !jsonResult.has("_batch")) {
+			
+			logger.debug("Full response: " + jsonResult.toString(3));
+			
+			if (jsonResult.has("retval")) {
 				
 				//retval can be either an json object or a json array,
 				//managing both possibilities here.
 				
 				try {
-					result = jsonResult.getJSONObject("retval").toString(3);
+					jsonResult = jsonResult.getJSONObject("retval");
+					result = jsonResult.toString(3);
 				
 				} catch (JSONException e) {
 					result = jsonResult.getJSONArray("retval").toString(3);
@@ -98,7 +101,7 @@ public class MongoDBScriptCallOperation implements CallOperation {
 
 			}
 			
-			else if (jsonResult.has("_batch")) {
+			if (jsonResult.has("_batch")) {
 				
 				result = jsonResult.getJSONArray("_batch").toString(3);
 			
