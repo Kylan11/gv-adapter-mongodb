@@ -1,44 +1,159 @@
-<!-- a single MongoDB generic operation -->
-<!ELEMENT mongodb-call (find|insert|update|delete)
+<!--
+    MongoDB call operation
 
-<!-- fixed parameter with value "call" -->
+        
+    #Label: @name
+    #Icon: GVMongoDBCall.png
+    #Category: DataBase
+    #SelectOnInsert    
+
+-->
+<!ELEMENT mongodb-call (Description?,insert?,find?,update?,delete?,aggregate?)>
+<!--
+    Unmodifiable.
+    Used by GreenVulcanoESB factory framework.
+-->
 <!ATTLIST mongodb-call type CDATA #FIXED "call">
+<!--
+    Operation name.
+    Used in the 'Flow' section to associate workflow nodes to VCL operations.
 
-<!-- the name of the operation -->
+    #NotNull
+    #Unique: ../*[@type='call' or @type='enqueue' or @type='dequeue']/@name
+-->
 <!ATTLIST mongodb-call name CDATA #REQUIRED>
+<!--
+    The resource (MongoDB collection) on which the operations on the db are performed.
+    Can contain placeholder to be decoded at runtime.
 
-<!-- the name of the MongoDB database to connect to -->
-<!ATTLIST mongodb-call database CDATA #REQUIRED>
-
-<!-- the name of the MongoDB collection to use to execute the operation -->
+    #NotNull
+-->
 <!ATTLIST mongodb-call collection CDATA #REQUIRED>
+<!--
+    The db name. Can contain placeholder to be decoded at runtime.
 
-<!-- the JNDI name of the MongoClientProvider instance -->
+    #NotNull
+-->
+<!ATTLIST mongodb-call database CDATA #REQUIRED>
+<!-- 
+    The JNDI name of the MongoClientProvider instance
+-->
 <!ATTLIST mongodb-call client-jndi-name CDATA #IMPLIED>
+<!--
+    Find operation for MongoDB. Specify at least the search query in the specified configuration child.
+    
+    #NotNull
+-->
+<!ELEMENT find (Description?,query,sort?,projection?)>
+<!--
+    The offset for data results pagination.
+    Can contain placeholder to be decoded at runtime.
 
-<!-- the supported commands -->
-<!ELEMENT find (query|sort*|projection*)>
-
+    #NotNull
+-->
+<!ATTLIST find call-order CDATA #IMPLIED>
+<!--
+    The MongoDB find query in JSON format.
+    Can contain placeholder to be decoded at runtime.
+-->
 <!ATTLIST find offset CDATA #IMPLIED>
+<!--
+    The limit for data results pagination, the numbero of records shown per page.
+    Can contain placeholder to be decoded at runtime.
+
+    #NotNull
+-->
 <!ATTLIST find limit CDATA #IMPLIED>
+<!--
+    The MongoDB find query in JSON format.
+    Can contain placeholder to be decoded at runtime.
+-->
 
+<!ATTLIST find count (true|false) #IMPLIED>
+<!--
+    If enabled, the query will only return the REC_READ property (row count).
+    Increases performance. Default: false
+-->
 <!ELEMENT query (#PCDATA)>
+<!--
+    The MongoDB sorting methods in JSON format.
+    It must contain a key-value couple for each ordering method retrieved:
+    - key: the entity on which you want to sort the data
+    - value: can be:
+        - 1: for ascending ordering
+        - -1: for descending ordering
+    Example:
+    {
+        "name": 1,
+        "age": -1
+    }
+      
+    Can contain placeholder to be decoded at runtime.
+-->
 <!ELEMENT sort (#PCDATA)>
+<!--
+	The MongoDB data projection expressed in JSON.
+-->
 <!ELEMENT projection (#PCDATA)>
-
-<!ELEMENT insert (EMPTY)>
+<!--
+    The MongoDB insert data in JSON format.
+    Can contain placeholder to be decoded at runtime.
+-->
+<!ELEMENT insert EMPTY>
+<!--
+	Enable/Disable transactionailty
+-->
+<!ATTLIST insert call-order CDATA #IMPLIED>
+<!--
+    The MongoDB find query in JSON format.
+    Can contain placeholder to be decoded at runtime.
+-->
 <!ATTLIST insert transactional (true|false) "false">
-
+<!--
+    The MongoDB update data in JSON format.
+    Can contain placeholder to be decoded at runtime.
+-->
 <!ELEMENT update (filter*)>
+<!--
+	Enable/Disable transactionailty
+-->
+<!ATTLIST update call-order CDATA #IMPLIED>
+<!--
+    The MongoDB find query in JSON format.
+    Can contain placeholder to be decoded at runtime.
+-->
 <!ATTLIST update transactional (true|false) "false">
+<!--
+	Enable/Disable upsert
+-->
 <!ATTLIST update upsert (true|false) "false">
+<!--
+	The MongoDB update filter
+-->
 <!ELEMENT filter (#PCDATA)>
-
-<!ELEMENT delete (EMPTY)>
-
+<!--
+    The MongoDB delete data in JSON format.
+    Can contain placeholder to be decoded at runtime.
+-->
+<!ELEMENT delete (#PCDATA)>
+<!--
+	Aggregate operation for MongoDB. Specify at least the JSON formatted search query in the specified configuration child.
+    
+    #NotNull
+-->
+<!ATTLIST delete call-order CDATA #IMPLIED>
+<!--
+    The MongoDB find query in JSON format.
+    Can contain placeholder to be decoded at runtime.
+-->
 <!ELEMENT aggregate (stage+)>
+<!--
+	The MongoDB instructions configurtation in JSON format.
+    Can contain placeholder to be decoded at runtime.
+-->
+<!ATTLIST aggregate call-order CDATA #IMPLIED>
+<!--
+    The MongoDB find query in JSON format.
+    Can contain placeholder to be decoded at runtime.
+-->
 <!ELEMENT stage (#PCDATA)>
-
-
-<!-- Omitting definition of element statement because is already defined in GVCore dtds 
-<!ELEMENT statement (#PCDATA)> -->
