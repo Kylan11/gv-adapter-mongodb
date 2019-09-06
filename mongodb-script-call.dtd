@@ -1,0 +1,27 @@
+<!--
+    MongoDB script call operation
+    #Label: @name    
+
+-->
+<!ELEMENT mongodb-script-call (Description?,(script+))>
+<!--
+    Unmodifiable.
+    Used by GreenVulcanoESB factory framework.
+-->
+<!ATTLIST mongodb-script-call type CDATA #FIXED "call">
+<!--
+    Operation name.
+    Used in the 'Flow' section to associate workflow nodes to VCL operations.
+
+    #NotNull
+-->
+<!ATTLIST mongodb-script-call name CDATA #REQUIRED>
+<!--
+    The db name. Can contain placeholder to be decoded at runtime.
+
+    #NotNull
+-->
+<!ATTLIST mongodb-script-call database CDATA #REQUIRED>
+
+<!--The js script to execute at runtime-->
+<!ELEMENT script (#PCDATA)>

@@ -8,106 +8,129 @@ import it.greenvulcano.gvesb.virtual.mongodb.dbo.MongoDBO;
 import it.greenvulcano.gvesb.virtual.mongodb.dbo.MongoDBOFactory;
 import it.greenvulcano.util.metadata.PropertiesHandler;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.NoSuchElementException;
 
 import org.bson.Document;
 import org.slf4j.Logger;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import com.mongodb.MongoClient;
 import com.mongodb.client.MongoCollection;
 
 public class MongoDBCallOperation implements CallOperation {
 
-    private static final Logger logger = org.slf4j.LoggerFactory.getLogger(MongoDBCallOperation.class);
+	private static final Logger logger = org.slf4j.LoggerFactory.getLogger(MongoDBCallOperation.class);
 
-    private OperationKey key = null;
+	private OperationKey key = null;
 
-    private String name;
-    
-    private String database;
-    private String collection;
-       
-    private MongoClient mongoClient;
-    
-    private MongoDBO dbo;
-    
-    @Override
-    public void init(Node node) throws InitializationException {
+	private String name;
 
-        logger.debug("Initializing mongodb-call...");
+	private String database;
 
-        try {
-        	
-        	name = XMLConfig.get(node, "@name");
-        	
-        	mongoClient = MongoDBChannel.getMongoClient(node)
-        			                    .orElseThrow(()-> new NoSuchElementException("MongoClient instance not found for Operation " + name));
-        	
-        	database = XMLConfig.get(node, "@database");
-        	collection = XMLConfig.get(node, "@collection");
+	private String collection;
 
-            dbo = MongoDBOFactory.build(node);  
+	private MongoClient mongoClient;
 
-            logger.debug("Configured DBOperation " + dbo.getDBOperationName());
+	private List<MongoDBO> dboList;
 
-        } catch (Exception e) {
+	private NodeList nodeList;
 
-            throw new InitializationException("GV_INIT_SERVICE_ERROR",
-                    new String[][] { { "message", e.getMessage() } }, e);
+	@Override
+	public void init(Node node) throws InitializationException {
 
-        }
+		logger.debug("Initializing mongodb-call...");
 
-    }
+		try {
 
-    @Override
-    public GVBuffer perform(GVBuffer gvBuffer) throws ConnectionException, CallException, InvalidDataException {
+			name = XMLConfig.get(node, "@name");
 
-        try {
-        	
-        	String actualDatabase = PropertiesHandler.expand(database, gvBuffer);
-        	String actualCollection = PropertiesHandler.expand(collection, gvBuffer);
-        	        	
-        	logger.debug("Preparing MongoDB operation " + dbo.getDBOperationName() + "  on database: " + actualDatabase + " collection: " + actualCollection);
-        	        	
-        	MongoCollection<Document> mongoCollection = mongoClient.getDatabase(actualDatabase)
-    															   .getCollection(actualCollection);
-        	
-        	        	
-    		dbo.execute(mongoCollection, gvBuffer);
+			mongoClient = MongoDBChannel.getMongoClient(node).orElseThrow(
+					() -> new NoSuchElementException("MongoClient instance not found for Operation " + name));
 
-        } catch (Exception exc) {
-            throw new CallException("GV_CALL_SERVICE_ERROR",
-                    new String[][] { { "service", gvBuffer.getService() }, { "system", gvBuffer.getSystem() },
-                            { "tid", gvBuffer.getId().toString() }, { "message", exc.getMessage() } },
-                    exc);
-        }
-        return gvBuffer;
-    }
+			database = XMLConfig.get(node, "@database");
+			collection = XMLConfig.get(node, "@collection");
 
-    @Override
-    public void cleanUp() {
-        // do nothing
-    }
+			nodeList = XMLConfig.getNodeList(node, "./*"); // extract children elements
 
-    @Override
-    public void destroy() {
-        // do nothing
-    }
+			dboList = new ArrayList<MongoDBO>();
 
-    @Override
-    public void setKey(OperationKey operationKey) {
-        this.key = operationKey;
-    }
+			// retrieves all the child nodes and puts them in a list to execute them in a pipeline 
+			for (Node callNode : MongoDBO.iterable(nodeList))
+				dboList.add(MongoDBOFactory.build(callNode));
 
-    @Override
-    public OperationKey getKey() {
-        return key;
-    }
+			// sorts the list by call-order so operations are executed in order
+			dboList.sort(MongoDBO.sort());
 
-    @Override
-    public String getServiceAlias(GVBuffer gvBuffer) {
-        return gvBuffer.getService();
-    }
+			logger.debug("MongoDBO operations correctly configured: " + dboList.size());
+
+		} catch (Exception e) {
+
+			throw new InitializationException("GV_INIT_SERVICE_ERROR", new String[][] { { "message", e.getMessage() } },
+					e);
+
+		}
+
+	}
+
+	@Override
+	public GVBuffer perform(GVBuffer gvBuffer) throws ConnectionException, CallException, InvalidDataException {
+
+		try {
+
+			String actualDatabase = PropertiesHandler.expand(database, gvBuffer);
+			String actualCollection = PropertiesHandler.expand(collection, gvBuffer);
+
+			MongoCollection<Document> mongoCollection = mongoClient.getDatabase(actualDatabase)
+					.getCollection(actualCollection);
+
+			for (MongoDBO dbo : dboList) {
+
+				logger.debug("Preparing MongoDB operation " + dbo.getDBOperationName() + "  on database: "
+						+ actualDatabase + " collection: " + actualCollection);
+
+				// this way, every operation will get the input from the previous one in a
+				// pipeline fashion
+				// only the last result will persist in gvBuffer
+				String resultSet = dbo.execute(mongoCollection, gvBuffer); // this is the actual operation call
+				if (!resultSet.equals(""))
+					gvBuffer.setObject(resultSet);
+			}
+
+		} catch (Exception exc) {
+			throw new CallException("GV_CALL_SERVICE_ERROR",
+					new String[][] { { "service", gvBuffer.getService() }, { "system", gvBuffer.getSystem() },
+							{ "tid", gvBuffer.getId().toString() }, { "message", exc.getMessage() } },
+					exc);
+		}
+		return gvBuffer;
+	}
+
+	@Override
+	public void cleanUp() {
+		// do nothing
+	}
+
+	@Override
+	public void destroy() {
+		// do nothing
+	}
+
+	@Override
+	public void setKey(OperationKey operationKey) {
+		this.key = operationKey;
+	}
+
+	@Override
+	public OperationKey getKey() {
+		return key;
+	}
+
+	@Override
+	public String getServiceAlias(GVBuffer gvBuffer) {
+		return gvBuffer.getService();
+	}
 
 }

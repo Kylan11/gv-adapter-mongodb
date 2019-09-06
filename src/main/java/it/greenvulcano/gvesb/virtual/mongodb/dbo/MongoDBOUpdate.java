@@ -27,7 +27,8 @@ public class MongoDBOUpdate extends MongoDBO {
 			String filter = XMLConfig.get(node, "./filter/text()", "{}");
 			String statement = XMLConfig.get(node, "./statement/text()");
 			boolean upsert = XMLConfig.getBoolean(node, "@upsert", false);
-			return Optional.of(new MongoDBOUpdate(filter, statement,  upsert));
+			String callOrder = XMLConfig.get(node, "@call-order", "0");
+			return Optional.of(new MongoDBOUpdate(filter, statement,  upsert, callOrder));
 			
 		} catch (Exception e) {
 			
@@ -40,10 +41,11 @@ public class MongoDBOUpdate extends MongoDBO {
 	private final String statement;	
 	private final boolean upsert;
 
-	public MongoDBOUpdate(String filter, String statement, boolean upsert) {
+	public MongoDBOUpdate(String filter, String statement, boolean upsert, String callOrder) {
 		this.filter = filter;
 		this.statement = statement;
 		this.upsert = upsert;
+		this.callOrder = Integer.valueOf(callOrder);
 	}
 
 	@Override
@@ -52,7 +54,7 @@ public class MongoDBOUpdate extends MongoDBO {
 	}
 
 	@Override
-	public void execute(MongoCollection<Document> mongoCollection, GVBuffer gvBuffer) throws PropertiesHandlerException, GVException {
+	public String execute(MongoCollection<Document> mongoCollection, GVBuffer gvBuffer) throws PropertiesHandlerException, GVException {
 		
 		String actualFilter = PropertiesHandler.expand(filter, gvBuffer);
 		String actualStatement = PropertiesHandler.expand(statement, gvBuffer);
@@ -75,7 +77,7 @@ public class MongoDBOUpdate extends MongoDBO {
 					});
 			
 		}
-		
+		return "";
 	}
 
 }

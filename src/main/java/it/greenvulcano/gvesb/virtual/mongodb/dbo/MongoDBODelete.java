@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.result.DeleteResult;
+
+import it.greenvulcano.configuration.XMLConfig;
 import it.greenvulcano.gvesb.buffer.GVBuffer;
 import it.greenvulcano.gvesb.buffer.GVException;
 import it.greenvulcano.util.metadata.PropertiesHandlerException;
@@ -21,8 +23,8 @@ public class MongoDBODelete extends MongoDBO {
 	static final Function<Node, Optional<MongoDBO>> BUILDER = node -> {
 
 		try {
-
-			return Optional.of(new MongoDBODelete());
+			String callOrder = XMLConfig.get(node, "@call-order", "0");
+			return Optional.of(new MongoDBODelete(callOrder));
 
 		} catch (Exception e) {
 
@@ -32,13 +34,17 @@ public class MongoDBODelete extends MongoDBO {
 
 	};
 	
+	public MongoDBODelete(String callOrder) {
+		this.callOrder = Integer.valueOf(callOrder);
+	}
+	
 	@Override
 	public String getDBOperationName() {		
 		return NAME;
 	}
 
 	@Override
-	public void execute(MongoCollection<Document> mongoCollection, GVBuffer gvBuffer) throws PropertiesHandlerException, GVException {
+	public String execute(MongoCollection<Document> mongoCollection, GVBuffer gvBuffer) throws PropertiesHandlerException, GVException {
 
 		// prepare the JSON filter to select the documents to delete from the specified collection
 		String deleteFilter = gvBuffer.getObject().toString();
@@ -75,7 +81,7 @@ public class MongoDBODelete extends MongoDBO {
 		}
 
 		// set the outbound content of the GVBuffer equal to the JSON representation of the delete operation report
-		gvBuffer.setObject(jsonResultSet.toString());
+		return jsonResultSet.toString();
 
 	}
 

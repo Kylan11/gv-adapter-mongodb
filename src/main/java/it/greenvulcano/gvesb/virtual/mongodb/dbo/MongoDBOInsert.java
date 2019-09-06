@@ -2,6 +2,8 @@ package it.greenvulcano.gvesb.virtual.mongodb.dbo;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
+
+import it.greenvulcano.configuration.XMLConfig;
 import it.greenvulcano.gvesb.buffer.GVBuffer;
 import it.greenvulcano.gvesb.buffer.GVException;
 import it.greenvulcano.util.metadata.PropertiesHandlerException;
@@ -23,8 +25,8 @@ public class MongoDBOInsert extends MongoDBO {
 	static final Function<Node, Optional<MongoDBO>> BUILDER = node -> {
 
 		try {
-
-			return Optional.of(new MongoDBOInsert());
+			String callOrder = XMLConfig.get(node, "@call-order", "0");
+			return Optional.of(new MongoDBOInsert(callOrder));
 
 		} catch (Exception e) {
 
@@ -34,13 +36,17 @@ public class MongoDBOInsert extends MongoDBO {
 
 	};
 	
+	public MongoDBOInsert(String callOrder) {
+		this.callOrder = Integer.valueOf(callOrder);
+	}
+	
 	@Override
 	public String getDBOperationName() {		
 		return NAME;
 	}
 
 	@Override
-	public void execute(MongoCollection<Document> mongoCollection, GVBuffer gvBuffer) throws PropertiesHandlerException, GVException {
+	public String execute(MongoCollection<Document> mongoCollection, GVBuffer gvBuffer) throws PropertiesHandlerException, GVException {
 
 		// prepare the JSON document(s) to insert into the specified MongoDB collection
 		String actualInsert = gvBuffer.getObject().toString();
@@ -138,9 +144,8 @@ public class MongoDBOInsert extends MongoDBO {
 
 		}
 
-		// set the outbound content of the GVBuffer equal to the persisted document(s)
-		gvBuffer.setObject(jsonResultSet.toString());
-
+		//gvBuffer.setObject(jsonResultSet.toString());
+		return jsonResultSet.toString();
 	}
 
 }

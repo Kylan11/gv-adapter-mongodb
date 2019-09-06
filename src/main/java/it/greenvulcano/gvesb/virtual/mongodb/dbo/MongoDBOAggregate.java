@@ -19,90 +19,86 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class MongoDBOAggregate extends MongoDBO {
-	
+
 	static final String NAME = "aggregate";
-	static final Function<Node, Optional<MongoDBO>> BUILDER = node ->{
-		
+	static final Function<Node, Optional<MongoDBO>> BUILDER = node -> {
+
 		try {
-		
-			NodeList stagesConfig =XMLConfig.getNodeList(node, "./stage");
-			
-			
-			List<String> stages = IntStream.range(0, stagesConfig.getLength())
-			         .mapToObj(stagesConfig::item)
-			         .map(Node::getTextContent)
-			         .collect(Collectors.toList());
-			
-			
-			return Optional.of(new MongoDBOAggregate(stages));
-			
+
+			NodeList stagesConfig = XMLConfig.getNodeList(node, "./stage");
+
+			List<String> stages = IntStream.range(0, stagesConfig.getLength()).mapToObj(stagesConfig::item)
+					.map(Node::getTextContent).collect(Collectors.toList());
+			String callOrder = XMLConfig.get(node, "@call-order", "0");
+			return Optional.of(new MongoDBOAggregate(stages, callOrder));
+
 		} catch (Exception e) {
-			
+
 			return Optional.empty();
 
 		}
-		
+
 	};
-	
+
 	private final List<String> stages;
-	
-	MongoDBOAggregate(List<String> stages) {
 
+	public MongoDBOAggregate(List<String> stages, String callOrder) {
+		this.callOrder = Integer.valueOf(callOrder);
 		this.stages = stages;
-	
+
 	}
-	
-	@Override
-	public String getDBOperationName() {		
-		return NAME;
-	} 
 
 	@Override
-	public void execute(MongoCollection<Document> mongoCollection, GVBuffer gvBuffer) throws PropertiesHandlerException, GVException {
-				
+	public String getDBOperationName() {
+		return NAME;
+	}
+
+	@Override
+	public String execute(MongoCollection<Document> mongoCollection, GVBuffer gvBuffer)
+			throws PropertiesHandlerException, GVException {
+
 		List<Document> stagesBson = new ArrayList<>();
-			
-		for (String s: stages) {
-			
+		for (String s : stages) {
+
 			try {
-			
-				String statement = PropertiesHandler.expand(s, gvBuffer);				
-				
-				logger.debug("Adding stage to aggregation: {}", statement);				
+
+				String statement = PropertiesHandler.expand(s, gvBuffer);
+
+				logger.debug("Adding stage to aggregation: {}", statement);
 				stagesBson.add(Document.parse(statement));
+			} catch (IllegalArgumentException e) {
+
+				logger.error("Error adding stage to aggregation, invalid parameter", e);
+				return "";
+
 			} catch (Exception e) {
-				
+
 				logger.error("Error adding stage to aggregation", e);
 
 				throw new GVException("Error adding stage to aggregation" + e.getClass().getName());
 
 			}
 		}
-	
-		MongoCursor<String> resultSet = mongoCollection
-				.aggregate(stagesBson)
-				.map(Document::toJson)
-				.iterator();
-		
+		MongoCursor<String> resultSet = mongoCollection.aggregate(stagesBson).map(Document::toJson).iterator();
+
 		StringBuilder jsonResult = new StringBuilder("[");
-		
+
 		int count = 0;
-		while(resultSet.hasNext()) {
+		while (resultSet.hasNext()) {
 			count++;
 			jsonResult.append(resultSet.next());
-			
-		    if(resultSet.hasNext()) {
-		    	jsonResult.append(",");
-		    } else {
-		    	break;
-		    }
-		}               
-		
+
+			if (resultSet.hasNext()) {
+				jsonResult.append(",");
+			} else {
+				break;
+			}
+		}
+
 		jsonResult.append("]");
 
 		gvBuffer.setProperty("REC_READ", Integer.toString(count));
-        gvBuffer.setObject(jsonResult.toString());
-		
-	}	
+		return jsonResult.toString();
+	}
 
 }

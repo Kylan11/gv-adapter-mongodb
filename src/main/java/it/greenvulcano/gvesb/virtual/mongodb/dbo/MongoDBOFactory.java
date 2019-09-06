@@ -9,7 +9,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Node;
 
-import it.greenvulcano.configuration.XMLConfig;
 import it.greenvulcano.configuration.XMLConfigException;
 
 public class MongoDBOFactory {
@@ -30,13 +29,10 @@ public class MongoDBOFactory {
 		
 		dboSuppliers.put(MongoDBOAggregate.NAME, MongoDBOAggregate.BUILDER);
 
-		// TODO repeat for each DBO operation
 
 	}
 
-	public static MongoDBO build(Node callOperationNode) throws XMLConfigException {
-
-		Node dboConfigurationNode = XMLConfig.getNode(callOperationNode, "./*[1]"); // extract the first child node to return its corresponding MongoDBO object
+	public static MongoDBO build(Node dboConfigurationNode) throws XMLConfigException {
 		
 		if (dboConfigurationNode != null && dboSuppliers.containsKey(dboConfigurationNode.getNodeName())) {
 
