@@ -93,7 +93,7 @@ public class MongoDBScriptCallOperation implements CallOperation {
 				
 				try {
 					jsonResult = jsonResult.getJSONObject("retval");
-					result = jsonResult.toString(3);
+					result = jsonResult.toString();
 				
 				} catch (JSONException e) {
 					result = jsonResult.getJSONArray("retval").toString(3);
