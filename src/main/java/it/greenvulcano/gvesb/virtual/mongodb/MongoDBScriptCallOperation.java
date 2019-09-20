@@ -103,7 +103,7 @@ public class MongoDBScriptCallOperation implements CallOperation {
 			
 			if (jsonResult.has("_batch")) {
 				
-				result = jsonResult.getJSONArray("_batch").toString(3);
+				result = jsonResult.getJSONArray("_batch").toString();
 			
 			}
 			
