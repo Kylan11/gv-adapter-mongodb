@@ -84,7 +84,7 @@ public class MongoDBScriptCallOperation implements CallOperation {
 
 			jsonResult = new JSONObject(result);
 			
-			logger.debug("Full response: " + jsonResult.toString(3));
+			logger.debug("Full response: " + jsonResult.toString());
 			
 			if (jsonResult.has("retval")) {
 				
@@ -96,7 +96,7 @@ public class MongoDBScriptCallOperation implements CallOperation {
 					result = jsonResult.toString();
 				
 				} catch (JSONException e) {
-					result = jsonResult.getJSONArray("retval").toString(3);
+					result = jsonResult.getJSONArray("retval").toString();
 				}
 
 			}
