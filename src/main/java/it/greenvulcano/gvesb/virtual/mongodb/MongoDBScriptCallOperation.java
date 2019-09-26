@@ -4,10 +4,11 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.client.MongoDatabase;
 
+
 import it.greenvulcano.configuration.XMLConfig;
 import it.greenvulcano.gvesb.buffer.GVBuffer;
-import it.greenvulcano.gvesb.buffer.GVException;
 import it.greenvulcano.gvesb.channel.mongodb.MongoDBChannel;
+import it.greenvulcano.gvesb.channel.mongodb.util.Properties;
 import it.greenvulcano.gvesb.virtual.*;
 import it.greenvulcano.util.metadata.PropertiesHandler;
 
@@ -65,7 +66,10 @@ public class MongoDBScriptCallOperation implements CallOperation {
 
 	@Override
 	public GVBuffer perform(GVBuffer gvBuffer) throws ConnectionException, CallException, InvalidDataException {
+		
+		
 		String result = "[]";
+		
 		try {
 
 			String actualDatabase = PropertiesHandler.expand(database, gvBuffer);
@@ -80,17 +84,21 @@ public class MongoDBScriptCallOperation implements CallOperation {
 			command.put("eval", String.format("function() { return %s; }", codeJs));
 
 			logger.debug("Executing code: " + codeJs + " on database: " + actualDatabase);
+			
 			result = db.runCommand(command).toJson();
-
-			jsonResult = new JSONObject(result);
 			
+<<<<<<< HEAD
+			logger.debug("Full response: " + result);
+=======
 			logger.debug("Full response: " + jsonResult.toString());
+>>>>>>> 8622f16cb416277586d45819bc7f25b46343bb5f
 			
-			if (jsonResult.has("retval")) {
+			try {
 				
-				//retval can be either an json object or a json array,
-				//managing both possibilities here.
-				
+<<<<<<< HEAD
+				gvBuffer.setObject(Properties.formatScriptResponse(new JSONObject(result)));
+			
+=======
 				try {
 					jsonResult = jsonResult.getJSONObject("retval");
 					result = jsonResult.toString();
@@ -99,15 +107,18 @@ public class MongoDBScriptCallOperation implements CallOperation {
 					result = jsonResult.getJSONArray("retval").toString();
 				}
 
+>>>>>>> 8622f16cb416277586d45819bc7f25b46343bb5f
 			}
 			
-			if (jsonResult.has("_batch")) {
+			catch(JSONException e) {
 				
+<<<<<<< HEAD
+				gvBuffer.setObject("null");
+=======
 				result = jsonResult.getJSONArray("_batch").toString();
+>>>>>>> 8622f16cb416277586d45819bc7f25b46343bb5f
 			
 			}
-			
-			gvBuffer.setObject(result);
 			
 		} catch (Exception exc) {
 			throw new CallException("GV_CALL_SERVICE_ERROR",

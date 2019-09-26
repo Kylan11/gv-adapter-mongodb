@@ -5,6 +5,9 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import it.greenvulcano.gvesb.channel.mongodb.exception.PropertyInitializationException;
 import it.greenvulcano.gvesb.channel.mongodb.exception.PropertyNotFoundException;
 
@@ -90,5 +93,34 @@ public class Properties {
         }
 
     }
+    
+    public static String formatScriptResponse(JSONObject jsonResult) throws JSONException {
+    	
+    	if (jsonResult.has("retval")) {
+			
+			//retval can be either an json object or a json array,
+			//managing both possibilities here.
+			
+			try {
+				jsonResult = jsonResult.getJSONObject("retval");
+				return jsonResult.toString();
+			
+			} catch (JSONException e) {
+				return jsonResult.getJSONArray("retval").toString();
+			}
 
+		}
+		
+		if (jsonResult.has("_batch")) {
+			
+			if(jsonResult.getJSONArray("_batch").length() == 1) {
+				return jsonResult.getJSONArray("_batch").get(0).toString();
+			}
+			else {
+				return jsonResult.getJSONArray("_batch").toString();
+			}
+		}
+    			
+		return "[]";
+    }
 }
