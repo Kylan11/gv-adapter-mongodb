@@ -33,8 +33,6 @@ public class MongoDBScriptCallOperation implements CallOperation {
 
 	private MongoClient mongoClient;
 
-	private JSONObject jsonResult;
-
 	private final BasicDBObject command = new BasicDBObject();
 
 	@Override
