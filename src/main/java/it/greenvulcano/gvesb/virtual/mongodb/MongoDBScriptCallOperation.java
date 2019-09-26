@@ -67,9 +67,6 @@ public class MongoDBScriptCallOperation implements CallOperation {
 	@Override
 	public GVBuffer perform(GVBuffer gvBuffer) throws ConnectionException, CallException, InvalidDataException {
 		
-		
-		String result = "[]";
-		
 		try {
 
 			String actualDatabase = PropertiesHandler.expand(database, gvBuffer);
@@ -85,38 +82,19 @@ public class MongoDBScriptCallOperation implements CallOperation {
 
 			logger.debug("Executing code: " + codeJs + " on database: " + actualDatabase);
 			
-			result = db.runCommand(command).toJson();
+			String result = db.runCommand(command).toJson();
 			
-<<<<<<< HEAD
 			logger.debug("Full response: " + result);
-=======
-			logger.debug("Full response: " + jsonResult.toString());
->>>>>>> 8622f16cb416277586d45819bc7f25b46343bb5f
+
 			
 			try {
 				
-<<<<<<< HEAD
 				gvBuffer.setObject(Properties.formatScriptResponse(new JSONObject(result)));
-			
-=======
-				try {
-					jsonResult = jsonResult.getJSONObject("retval");
-					result = jsonResult.toString();
-				
-				} catch (JSONException e) {
-					result = jsonResult.getJSONArray("retval").toString();
-				}
-
->>>>>>> 8622f16cb416277586d45819bc7f25b46343bb5f
 			}
 			
 			catch(JSONException e) {
 				
-<<<<<<< HEAD
 				gvBuffer.setObject("null");
-=======
-				result = jsonResult.getJSONArray("_batch").toString();
->>>>>>> 8622f16cb416277586d45819bc7f25b46343bb5f
 			
 			}
 			
