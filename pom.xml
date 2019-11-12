@@ -6,7 +6,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>it.greenvulcano.gvesb.adapter</groupId>
 
-	<artifactId>gvvcl-mongo</artifactId>
+	<artifactId>gvvcl-mongo-unofficial</artifactId>
 	<version>4.1.0-SNAPSHOT</version>
 	<packaging>bundle</packaging>
 
@@ -114,7 +114,7 @@
 		<dependency>
 			<groupId>org.mongodb</groupId>
 			<artifactId>mongo-java-driver</artifactId>
-			<version>3.11.0</version>
+			<version>3.6.3</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
