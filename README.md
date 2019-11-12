@@ -195,7 +195,7 @@ You can test these Services selecting them in the Execute section of the GreenVu
     ```
 Don't worry about escaping **"** quotes. Since the string is parsed as a whole, there's no need to use **\\**.
 
-## Version 1.1 Features
+## New Features - Unofficial version 
 
 - Added 'count' attribute to DBOFind. Optional, disabled by default. If checked true, will only return a REC_READ property which represents the number of found documents that match the query. The REC_READ property is returned regardless; however it's very useful performance wise if you're only looking to retrieve statistics since it doesn't actually get all the information on the documents you're looking for but just counts them;
 
