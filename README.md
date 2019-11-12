@@ -77,12 +77,12 @@ This constraint can be enforced by properly configuring the *level* of the Karaf
 For the VCL adapter bundle, we will use a bundle level higher than the GreenVulcano core bundles (i.e. ```80```). The following command will install the VCL adapter bundle and set its level to ```96``` by convention, using the ```-l``` attribute:
 
 ```shell
-karaf@root()> bundle:install -l 96 mvn:it.greenvulcano.gvesb.adapter/gvvcl-mongo/4.0.0-SNAPSHOT
+karaf@root()> bundle:install -l 96 mvn:it.greenvulcano.gvesb.adapter/gvvcl-mongo-unofficial/4.1.0-SNAPSHOT
 
 Bundle ID: x
 ```
 
-Make sure that the bundle ```GreenVulcano ESB VCL interface for MongoDB 2.0``` appears in the ```list``` of installed bundles in ```Installed``` status and with bundle level (```Lvl```) equal to ```96``` (or at least strictly higher than ```80```).  
+Make sure that the bundle ```GreenVulcano ESB VCL interface for MongoDB (UNOFFICIAL)``` appears in the ```list``` of installed bundles in ```Installed``` status and with bundle level (```Lvl```) equal to ```96``` (or at least strictly higher than ```80```).  
 Then, use its ID to put the bundle in ```Active``` status by executing the following command:
 
 ```shell
