@@ -13,115 +13,108 @@ import it.greenvulcano.gvesb.channel.mongodb.exception.PropertyNotFoundException
 
 public class Properties {
 
-    private static java.util.Properties properties;
+	private static java.util.Properties properties;
 
-    static {
+	static {
 
-        // declare the input stream object used to read application.properties file
-        InputStream input = null;
+		// declare the input stream object used to read application.properties file
+		InputStream input = null;
 
-        try {
+		try {
 
-            // initialize the properties object
-            properties = new java.util.Properties();
+			// initialize the properties object
+			properties = new java.util.Properties();
 
-            // open the application.properties file in read mode
-            input = new FileInputStream("src/main/resources/application.properties");
+			// open the application.properties file in read mode
+			input = new FileInputStream("src/main/resources/application.properties");
 
-            // load the properties defined in the file into the properties object
-            properties.load(input);
+			// load the properties defined in the file into the properties object
+			properties.load(input);
 
-        }
+		}
 
-        catch (FileNotFoundException e) {
+		catch (FileNotFoundException e) {
 
-            System.out.println("application.properties file not found");
+			System.out.println("application.properties file not found");
 
-        }
+		}
 
-        catch (IOException e) {
+		catch (IOException e) {
 
-            System.out.println("An I/O error occurred while processing application.properties file: " + e.getMessage());
+			System.out.println("An I/O error occurred while processing application.properties file: " + e.getMessage());
 
-        }
+		}
 
-        // close the input stream, if it was opened
-        finally {
+		// close the input stream, if it was opened
+		finally {
 
-            if (input != null) {
+			if (input != null) {
 
-                try { input.close(); }
+				try {
+					input.close();
+				}
 
-                catch (IOException e) { System.out.println("An error occurred while closing the application.properties input stream: " + e.getMessage()); }
+				catch (IOException e) {
+					System.out.println("An error occurred while closing the application.properties input stream: "
+							+ e.getMessage());
+				}
 
-            }
+			}
 
-        }
+		}
 
-    }
+	}
 
+	public static String getPropertyValueAsString(String key)
+			throws IllegalArgumentException, PropertyInitializationException, PropertyNotFoundException {
 
+		if (properties == null) {
 
-    public static String getPropertyValueAsString(String key) throws IllegalArgumentException, PropertyInitializationException, PropertyNotFoundException {
+			throw new PropertyInitializationException();
 
-        if (properties == null) {
+		}
 
-            throw new PropertyInitializationException();
+		if (key == null || key.length() == 0) {
 
-        }
+			String message = "Null-reference parameter is not allowed";
 
-        if (key == null || key.length() == 0) {
+			System.out.println(message);
 
-            String message = "Null-reference parameter is not allowed";
+			throw new IllegalArgumentException(message);
 
-            System.out.println(message);
+		}
 
-            throw new IllegalArgumentException(message);
+		try {
 
-        }
+			return properties.getProperty(key);
 
-        try {
+		} catch (Exception e) {
 
-            return properties.getProperty(key);
+			System.out.println("An error occurred while fetching the value of property " + key
+					+ " from the properties: " + e.getMessage());
 
-        } catch (Exception e) {
+			throw new PropertyNotFoundException(key);
 
-            System.out.println("An error occurred while fetching the value of property " + key + " from the properties: " + e.getMessage());
+		}
 
-            throw new PropertyNotFoundException(key);
+	}
 
-        }
+	public static String formatScriptResponse(JSONObject jsonResult) {
 
-    }
-    
-    public static String formatScriptResponse(JSONObject jsonResult) throws JSONException {
-    	
-    	if (jsonResult.has("retval")) {
-			
-			//retval can be either an json object or a json array,
-			//managing both possibilities here.
-			
+		if (jsonResult.has("retval")) {
 			try {
 				jsonResult = jsonResult.getJSONObject("retval");
-				if(!jsonResult.has("_batch"))
+				if (jsonResult.has("_batch")) {
+					return (jsonResult.getJSONArray("_batch").length() == 1)
+							? jsonResult.getJSONArray("_batch").get(0).toString()
+							: jsonResult.getJSONArray("_batch").toString();
+				}
+				else
 					return jsonResult.toString();
-			
 			} catch (JSONException e) {
 				return jsonResult.getJSONArray("retval").toString();
 			}
-
 		}
-		
-		if (jsonResult.has("_batch")) {
-			
-			if(jsonResult.getJSONArray("_batch").length() == 1) {
-				return jsonResult.getJSONArray("_batch").get(0).toString();
-			}
-			else {
-				return jsonResult.getJSONArray("_batch").toString();
-			}
-		}
-    			
-		return "[]";
-    }
+		return jsonResult.toString();
+	}
 }
