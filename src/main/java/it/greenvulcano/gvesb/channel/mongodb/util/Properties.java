@@ -103,7 +103,8 @@ public class Properties {
 			
 			try {
 				jsonResult = jsonResult.getJSONObject("retval");
-				return jsonResult.toString();
+				if(!jsonResult.has("_batch"))
+					return jsonResult.toString();
 			
 			} catch (JSONException e) {
 				return jsonResult.getJSONArray("retval").toString();
