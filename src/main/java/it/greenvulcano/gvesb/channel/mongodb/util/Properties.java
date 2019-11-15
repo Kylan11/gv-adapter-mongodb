@@ -104,16 +104,17 @@ public class Properties {
 		if (jsonResult.has("retval")) {
 			try {
 				jsonResult = jsonResult.getJSONObject("retval");
-				if (jsonResult.has("_batch")) {
-					return (jsonResult.getJSONArray("_batch").length() == 1)
-							? jsonResult.getJSONArray("_batch").get(0).toString()
-							: jsonResult.getJSONArray("_batch").toString();
-				}
-				else
+				if (!jsonResult.has("_batch"))
 					return jsonResult.toString();
 			} catch (JSONException e) {
 				return jsonResult.getJSONArray("retval").toString();
 			}
+		}
+		
+		if(jsonResult.has("_batch")) {
+			return (jsonResult.getJSONArray("_batch").length() == 1)
+					? jsonResult.getJSONArray("_batch").get(0).toString()
+					: jsonResult.getJSONArray("_batch").toString();
 		}
 		return jsonResult.toString();
 	}
