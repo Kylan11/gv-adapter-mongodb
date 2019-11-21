@@ -9,6 +9,7 @@ import it.greenvulcano.util.metadata.PropertiesHandler;
 import it.greenvulcano.util.xml.XMLUtils;
 import it.greenvulcano.util.xpath.XPathFinder;
 
+import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -23,25 +24,26 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import com.mongodb.MongoClient;
-import com.mongodb.MongoClientURI;
+import com.mongodb.MongoClientOptions;
+import com.mongodb.ServerAddress;
 
 public class MongoDBChannel {
-	
+
 	private final static Logger LOG = LoggerFactory.getLogger(MongoDBChannel.class);
 	private final static Map<String, MongoClient> mongoClients = new HashMap<>();
 	private final static JNDIHelper jndiContext = new JNDIHelper();
-		
+
 	public static void setup() {
-		
+
 		try {
-		
-			NodeList mongoChannelList = XMLConfig.getNodeList(GreenVulcanoConfig.getSystemsConfigFileName(),"//Channel[@type='MongoDBAdapter']");
-			
-			LOG.debug("Enabled MongoDBAdapter channels found: "+mongoChannelList.getLength());
-			IntStream.range(0, mongoChannelList.getLength())
-	        		 .mapToObj(mongoChannelList::item)		         
-	        		 .forEach(MongoDBChannel::buildMongoClient);
-		
+
+			NodeList mongoChannelList = XMLConfig.getNodeList(GreenVulcanoConfig.getSystemsConfigFileName(),
+					"//Channel[@type='MongoDBAdapter']");
+
+			LOG.debug("Enabled MongoDBAdapter channels found: " + mongoChannelList.getLength());
+			IntStream.range(0, mongoChannelList.getLength()).mapToObj(mongoChannelList::item)
+					.forEach(MongoDBChannel::buildMongoClient);
+
 		} catch (XMLConfigException e) {
 			LOG.error("Error reading configuration", e);
 		}
@@ -50,67 +52,77 @@ public class MongoDBChannel {
 	public static void shutdown() {
 
 		for (Entry<String, MongoClient> client : mongoClients.entrySet()) {
-			
+
 			try {
 				client.getValue().close();
 			} catch (Exception e) {
 				LOG.error("Error closing client for Channel " + client.getKey(), e);
 			}
 		}
-		
+
 		mongoClients.clear();
-		
+
 	}
-	
-	
-    private static void buildMongoClient(Node mongoChannelNode) {
-    	try {
 
-    		if (XMLConfig.exists(mongoChannelNode, "@endpoint") && XMLConfig.getBoolean(mongoChannelNode, "@enabled", true)) {
-    			
-    			LOG.debug("Configuring MongoClient instance for Channel "+XMLUtils.get_S(mongoChannelNode, "@id-channel")+ " in System" + XMLUtils.get_S(mongoChannelNode.getParentNode(), "@id-system"));
-    			
-    			String uri = PropertiesHandler.expand(XMLUtils.get_S(mongoChannelNode, "@endpoint"));
-        		MongoClientURI mongoClientURI = new MongoClientURI(uri);        		
-        		mongoClients.put(XPathFinder.buildXPath(mongoChannelNode), new MongoClient(mongoClientURI));
+	private static void buildMongoClient(Node mongoChannelNode) {
+		try {
 
-    		}    		
-    		    		
-    	} catch (Exception e) {
-    		 LOG.error("Error configuring MongoClient", e);
+			if (XMLConfig.exists(mongoChannelNode, "@endpoint")
+					&& XMLConfig.getBoolean(mongoChannelNode, "@enabled", true)) {
+
+				LOG.debug("Configuring MongoClient instance for Channel "
+						+ XMLUtils.get_S(mongoChannelNode, "@id-channel") + " in System"
+						+ XMLUtils.get_S(mongoChannelNode.getParentNode(), "@id-system"));
+
+				URI uri = new URI(PropertiesHandler.expand(XMLUtils.get_S(mongoChannelNode, "@endpoint")));
+				int conn_timeout;
+				try {
+					conn_timeout = Integer.parseInt(
+							PropertiesHandler.expand(XMLUtils.get_S(mongoChannelNode, "@conn-timeout", "10000")));
+				} catch (NumberFormatException e) {
+					conn_timeout = 10000;
+				}
+				MongoClientOptions options = MongoClientOptions.builder().connectTimeout(conn_timeout).build();
+
+				mongoClients.put(XPathFinder.buildXPath(mongoChannelNode),
+						new MongoClient(new ServerAddress(uri.getHost(), uri.getPort()), options));
+
+			}
+
+		} catch (Exception e) {
+			LOG.error("Error configuring MongoClient", e);
 		}
-    	
-    }
-    
-    public static Optional<MongoClient> getMongoClient(Node callOperationNode) {
-    	
-    	Optional<MongoClient> client = Optional.empty();
-    	
-    	try {
+
+	}
+
+	public static Optional<MongoClient> getMongoClient(Node callOperationNode) {
+
+		Optional<MongoClient> client = Optional.empty();
+
+		try {
 			if (XMLConfig.exists(callOperationNode, "@client-jndi-name")) {
-				
-				String jndiName = XMLConfig.get(callOperationNode, "@client-jndi-name");				
-				LOG.debug("Retrieving MongoClientProvider by  JNDI name: "+jndiName);
-				
-				MongoClientProvider mongoClientProvider = (MongoClientProvider) jndiContext.lookup(jndiName);				
+
+				String jndiName = XMLConfig.get(callOperationNode, "@client-jndi-name");
+				LOG.debug("Retrieving MongoClientProvider by  JNDI name: " + jndiName);
+
+				MongoClientProvider mongoClientProvider = (MongoClientProvider) jndiContext.lookup(jndiName);
 				client = Optional.ofNullable(mongoClientProvider.getMongoClient());
-				
+
 			} else {
-				
+
 				String xpath = XPathFinder.buildXPath(callOperationNode.getParentNode());
-				LOG.debug("Retrieving MongoClient from Channel map using key: "+xpath);
-				
+				LOG.debug("Retrieving MongoClient from Channel map using key: " + xpath);
+
 				client = Optional.ofNullable(mongoClients.get(xpath));
-		    	
+
 			}
 		} catch (XMLConfigException e) {
 			LOG.debug("Error reading XML config", e);
 		} catch (NamingException e) {
 			LOG.debug("Error retrieving MongoClientProvider from JNDI context", e);
-		}    	
-    	
-    	
-    	return client;
-    }	
+		}
+
+		return client;
+	}
 
 }
