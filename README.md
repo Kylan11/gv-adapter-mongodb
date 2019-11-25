@@ -185,7 +185,7 @@ You can test these Services selecting them in the Execute section of the GreenVu
  ```js
     aggregateDailyStats(@{{JSON_INPUT}});
  ``` 
- **Use caution when executing properties or any variable code, as it can potentially be target of code injection attacks**;
+ **This feature only works in MongoDB 3.x or earlier versions (Evaluation of js scripts has been removed in version 4.0 and above). Use caution when executing properties or any variable code, as it can potentially be target of code injection attacks.**;
 - **Query**: a string representation of a JSON, which must comply to the MongoDB syntax. To clarify, let's assume that our previously defined collection contains a list of Employees. We want to find a specific employee named "Mark" who's 25 years old. Our JSON string will look like this:
     ```json
     {
