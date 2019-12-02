@@ -208,6 +208,8 @@ Don't worry about escaping **"** quotes. Since the string is parsed as a whole, 
 - For each MongoDB call, you can now define multiple DBOs (find, insert, aggregate, delete, update) to be executed consecutively as opposed to just one. In order to do that, you will notice a new attribute has been added for each DBO: the **call-order** (must be an integer number). In case you only have one DBO in your call, you can leave it empty. 
 Otherwise, you MUST specify it to avoid unwanted issues (like, per say, if you wanted to perform a find and then insert the result in another collection, you wanna make sure the find operation is executed before the insert;
 
-- Added mongodb-script-call, which lets you call stored functions on MongoDB and retrieve the result set in a dynamic fashion.
+- Added mongodb-script-call, which lets you call stored functions on MongoDB and retrieve the result set in a dynamic fashion. **Only working in MongoDB Version 3.x or below, as the eval functionality has been removed since**;
 
+- You may now specify a **connection timeout** (```conn-timeout```) at the Channel level (which must be set equal to MongoDBChannel) that will be used when building your MongoDB client instance. As of currently, a refactoring that will let you set run-time specific options at the mongodb-call level is being worked on.
 
+New features and compatibility addresses are constantly being revised, so stay tuned!
