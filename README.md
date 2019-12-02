@@ -38,7 +38,7 @@ karaf@root()> bundle:install -s wrap:mvn:org.mongodb/mongo-java-driver/3.6.3
 Depending on your current Karaf's feature configuration, you may be required to install the following bundle as well:
 
 ```shell
-bundle:install -s wrap:mvn:org.json/json
+karaf@root()> bundle:install -s wrap:mvn:org.json/json
 ```
 If the latter displays an error message regarding uniqueness, ignore it, as the library was probably already linked to an existing and active bundle currently loaded in your instance.
 
