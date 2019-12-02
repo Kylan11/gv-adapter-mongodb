@@ -30,13 +30,19 @@ Then, you need to have installed Apache Maven (3.5.4 or higher) and Apache Karaf
 
 Next, you need to install the GreenVulcano engine on the Apache Karaf container. Please refer to [this link](https://github.com/kylan11/gv-engine/blob/master/quickstart-guide.md) for further reference.
 
-In order to install the bundle in Apache Karaf to use it for a GreenVulcano application project, you need to install its dependencies. Open the Apache Karaf terminal by running the Karaf executable and type the following command:
+In order to install the bundle in Apache Karaf to use it for a GreenVulcano application project, you need to install its dependencies. Open the Apache Karaf terminal by running the Karaf executable and type the following commands:
 
 ```shell
-karaf@root()> bundle:install -s wrap:mvn:org.mongodb/mongo-java-driver/3.6.3 && bundle:install -s wrap:mvn:org.json/json
+karaf@root()> bundle:install -s wrap:mvn:org.mongodb/mongo-java-driver/3.6.3
 ```
+Depending on your current Karaf's feature configuration, you may be required to install the following bundle as well:
 
-In case of success, this command will print the ID of the installed bundle:
+```shell
+bundle:install -s wrap:mvn:org.json/json
+```
+If the latter displays an error message regarding uniqueness, ignore it, as the library was probably already linked to an existing and active bundle currently loaded in your instance.
+
+Either way, in case of success, both bundles will print their unique ID, as such:
 
 ```shell
 Bundle ID: n
