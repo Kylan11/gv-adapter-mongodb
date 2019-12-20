@@ -121,10 +121,15 @@ public class MongoDBCallOperation implements CallOperation {
 
 	public String buildResult(String resultSet, String rowsetBuilder) {
 		if (rowsetBuilder.contentEquals("xml")) {
+			String xml11pattern = "[^"
+                    + "\u0001-\uD7FF"
+                    + "\uE000-\uFFFD"
+                    + "\ud800\udc00-\udbff\udfff"
+                    + "]+";
 			try {
-				return XML.toString(new JSONObject(resultSet), "Document");
+				return XML.toString(new JSONObject(resultSet.replaceAll(xml11pattern, "")), "Document");
 			} catch (JSONException e) {
-				return XML.toString(new JSONArray(resultSet), "Document");
+				return XML.toString(new JSONArray(resultSet.replaceAll(xml11pattern, "")), "Document");
 			}
 		}
 		return resultSet;
