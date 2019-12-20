@@ -13,6 +13,10 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 import org.bson.Document;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.json.XML;
 import org.slf4j.Logger;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -38,6 +42,8 @@ public class MongoDBCallOperation implements CallOperation {
 
 	private NodeList nodeList;
 
+	private String rowsetBuilder;
+
 	@Override
 	public void init(Node node) throws InitializationException {
 
@@ -51,17 +57,21 @@ public class MongoDBCallOperation implements CallOperation {
 					() -> new NoSuchElementException("MongoClient instance not found for Operation " + name));
 
 			database = XMLConfig.get(node, "@database");
+
 			collection = XMLConfig.get(node, "@collection");
+
+			rowsetBuilder = XMLConfig.get(node, "@rowset-builder", "json");
 
 			nodeList = XMLConfig.getNodeList(node, "./*"); // extract children elements
 
 			dboList = new ArrayList<MongoDBO>();
 
-			// retrieves all the child nodes and puts them in a list to execute them in a pipeline 
+			// retrieves all the child nodes and puts them in a list to execute them in a
+			// pipeline
 			for (Node callNode : MongoDBO.iterable(nodeList))
 				dboList.add(MongoDBOFactory.build(callNode));
 
-			// sorts the list by call-order so operations are executed in order
+			// sorts the list by call-order so operations are executed in the intended order
 			dboList.sort(MongoDBO.sort());
 
 			logger.debug("MongoDBO operations correctly configured: " + dboList.size());
@@ -95,8 +105,9 @@ public class MongoDBCallOperation implements CallOperation {
 				// pipeline fashion
 				// only the last result will persist in gvBuffer
 				String resultSet = dbo.execute(mongoCollection, gvBuffer); // this is the actual operation call
-				if (!resultSet.equals(""))
-					gvBuffer.setObject(resultSet);
+				if (!resultSet.equals("")) {
+					gvBuffer.setObject(buildResult(resultSet, rowsetBuilder));
+				}
 			}
 
 		} catch (Exception exc) {
@@ -106,6 +117,19 @@ public class MongoDBCallOperation implements CallOperation {
 					exc);
 		}
 		return gvBuffer;
+	}
+
+	public String buildResult(String resultSet, String rowsetBuilder) {
+		if (rowsetBuilder.contentEquals("xml")) {
+			Object output = null;
+			try {
+				output = new JSONObject(resultSet);
+			} catch (JSONException e) {
+				output = new JSONArray(resultSet);
+			}
+			return XML.toString(output, "Document");
+		}
+		return resultSet;
 	}
 
 	@Override

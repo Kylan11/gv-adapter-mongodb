@@ -20,15 +20,18 @@ import it.greenvulcano.util.metadata.PropertiesHandlerException;
 public class MongoDBOUpdate extends MongoDBO {
 	
 	static final String NAME = "update";
+	
+	private String createIndex = "";
+	
 	static final Function<Node, Optional<MongoDBO>> BUILDER = node ->{
-		
 		try {
 		
 			String filter = XMLConfig.get(node, "./filter/text()", "{}");
 			String statement = XMLConfig.get(node, "./statement/text()");
 			boolean upsert = XMLConfig.getBoolean(node, "@upsert", false);
 			String callOrder = XMLConfig.get(node, "@call-order", "0");
-			return Optional.of(new MongoDBOUpdate(filter, statement,  upsert, callOrder));
+			String createIndex = XMLConfig.get(node, "@create-index", "{}");
+			return Optional.of(new MongoDBOUpdate(filter, statement,  upsert, callOrder, createIndex));
 			
 		} catch (Exception e) {
 			
@@ -41,11 +44,12 @@ public class MongoDBOUpdate extends MongoDBO {
 	private final String statement;	
 	private final boolean upsert;
 
-	public MongoDBOUpdate(String filter, String statement, boolean upsert, String callOrder) {
+	public MongoDBOUpdate(String filter, String statement, boolean upsert, String callOrder, String createIndex) {
 		this.filter = filter;
 		this.statement = statement;
 		this.upsert = upsert;
 		this.callOrder = Integer.valueOf(callOrder);
+		this.createIndex = createIndex;
 	}
 
 	@Override
@@ -76,6 +80,14 @@ public class MongoDBOUpdate extends MongoDBO {
 						} catch (GVException e) {}
 					});
 			
+		}
+		
+		if(createIndex != "" && createIndex != "{}") {
+			
+			createIndex = PropertiesHandler.expand(createIndex, gvBuffer);
+			logger.info("Creating index: " + createIndex);
+			mongoCollection.createIndex(Document.parse(createIndex));
+		
 		}
 		return "";
 	}

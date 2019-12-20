@@ -6,6 +6,7 @@ import com.mongodb.client.MongoCursor;
 import it.greenvulcano.configuration.XMLConfig;
 import it.greenvulcano.gvesb.buffer.GVBuffer;
 import it.greenvulcano.gvesb.buffer.GVException;
+import it.greenvulcano.util.metadata.PropertiesHandler;
 import it.greenvulcano.util.metadata.PropertiesHandlerException;
 import org.bson.Document;
 import org.json.JSONArray;
@@ -21,12 +22,15 @@ import java.util.function.Function;
 public class MongoDBOInsert extends MongoDBO {
 
 	static final String NAME = "insert";
+	
+	private String createIndex = "";
 
 	static final Function<Node, Optional<MongoDBO>> BUILDER = node -> {
 
 		try {
 			String callOrder = XMLConfig.get(node, "@call-order", "0");
-			return Optional.of(new MongoDBOInsert(callOrder));
+			String createIndex = XMLConfig.get(node, "@create-index", "{}");
+			return Optional.of(new MongoDBOInsert(callOrder, createIndex));
 
 		} catch (Exception e) {
 
@@ -36,8 +40,9 @@ public class MongoDBOInsert extends MongoDBO {
 
 	};
 	
-	public MongoDBOInsert(String callOrder) {
+	public MongoDBOInsert(String callOrder, String createIndex) {
 		this.callOrder = Integer.valueOf(callOrder);
+		this.createIndex = createIndex;
 	}
 	
 	@Override
@@ -143,7 +148,14 @@ public class MongoDBOInsert extends MongoDBO {
 			jsonResultSet.append("]");
 
 		}
-
+		
+		if(createIndex != "" && createIndex != "{}") {
+			
+			createIndex = PropertiesHandler.expand(createIndex, gvBuffer);
+			logger.info("Creating index: " + createIndex);
+			mongoCollection.createIndex(Document.parse(createIndex));
+			
+		}
 		//gvBuffer.setObject(jsonResultSet.toString());
 		return jsonResultSet.toString();
 	}

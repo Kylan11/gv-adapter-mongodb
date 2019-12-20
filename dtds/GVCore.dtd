@@ -13368,6 +13368,12 @@
 <!ATTLIST Channel endpoint CDATA #IMPLIED>
 
 <!--
+    Default connection timeout to be used by call operations 
+    in this channel, expressed in ms.
+-->
+<!ATTLIST Channel conn-timeout CDATA #IMPLIED>
+
+<!--
     An identifier for channel adapter.
     Available implementation: RESTAdapter, MQTTAdapter, DBAdapter.
 	 UPDATE: Added MongoDBAdapter
@@ -14307,13 +14313,17 @@
 
 <!--
     MongoDB call operation
-
         
     #Label: @name
+    #SelectOnInsert
     #Icon: GVMongoDBCall.png
-    #Category: DataBase
-    #SelectOnInsert    
+    #Template:
 
+        <xsl:template match="dh-call">
+            <xsl:if test="Description">
+                <small><br/><xsl:value-of select="Description"/></small>
+            </xsl:if>
+        </xsl:template>
 -->
 <!ELEMENT mongodb-call (Description?,insert?,find?,update?,delete?,aggregate?)>
 <!--
@@ -14346,6 +14356,12 @@
     The JNDI name of the MongoClientProvider instance
 -->
 <!ATTLIST mongodb-call client-jndi-name CDATA #IMPLIED>
+<!--
+    Specifies in which format to return the read records.
+
+    #NotNull
+-->
+<!ATTLIST mongodb-call rowset-builder (json|xml) "json">
 <!--
     Find operation for MongoDB. Specify at least the search query in the specified configuration child.
     
@@ -14408,12 +14424,17 @@
 -->
 <!ELEMENT insert EMPTY>
 <!--
-	Enable/Disable transactionailty
+	If the mongodb-call has multiple DBOs, sorts them
+	and executes them in order using this integer attribute.
 -->
 <!ATTLIST insert call-order CDATA #IMPLIED>
 <!--
-    The MongoDB find query in JSON format.
-    Can contain placeholder to be decoded at runtime.
+	If not empty, creates an index in that collection
+	with the json specified in this attribute value.
+-->
+<!ATTLIST insert create-index CDATA #IMPLIED>
+<!--
+	Enable/Disable transactionailty
 -->
 <!ATTLIST insert transactional (true|false) "false">
 <!--
@@ -14422,12 +14443,21 @@
 -->
 <!ELEMENT update (filter*)>
 <!--
-	Enable/Disable transactionailty
+	If the mongodb-call has multiple DBOs, sorts them
+	and executes them in order using this integer attribute.
 -->
 <!ATTLIST update call-order CDATA #IMPLIED>
 <!--
     The MongoDB find query in JSON format.
     Can contain placeholder to be decoded at runtime.
+-->
+<!--
+	If not empty, creates an index in that collection
+	with the json specified in this attribute value.
+-->
+<!ATTLIST update create-index CDATA #IMPLIED>
+<!--
+	Enable/Disable transactionailty
 -->
 <!ATTLIST update transactional (true|false) "false">
 <!--
@@ -14444,9 +14474,8 @@
 -->
 <!ELEMENT delete (#PCDATA)>
 <!--
-	Aggregate operation for MongoDB. Specify at least the JSON formatted search query in the specified configuration child.
-    
-    #NotNull
+	If the mongodb-call has multiple DBOs, sorts them
+	and executes them in order using this integer attribute.
 -->
 <!ATTLIST delete call-order CDATA #IMPLIED>
 <!--
@@ -14455,8 +14484,8 @@
 -->
 <!ELEMENT aggregate (stage+)>
 <!--
-	The MongoDB instructions configurtation in JSON format.
-    Can contain placeholder to be decoded at runtime.
+	If the mongodb-call has multiple DBOs, sorts them
+	and executes them in order using this integer attribute.
 -->
 <!ATTLIST aggregate call-order CDATA #IMPLIED>
 <!--

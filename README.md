@@ -131,6 +131,7 @@ Some constraints apply to these XML nodes.
     - ```name``` must be declared: it defines the name of the Operation node;
     - ```database``` must be declared: it defines the name of the MongoDB database to query;
     - ```collection``` must be declared: it defines the name of the MongoDB collection of the specified database to query;
+    - ```rowset-builder``` defaults to ```json``` and specifies in which format to output the result sets;
     - the ```<query>``` element must contain the query to perform against the specified database and collection; it must comply the MongoDB query syntax.
 - The ```<mongodb-list-collections-call>``` XML node must comply with the following syntax:
     - ```type``` must be declared and set equal to ```"call"```;
@@ -211,5 +212,9 @@ Otherwise, you MUST specify it to avoid unwanted issues (like, per say, if you w
 - Added mongodb-script-call, which lets you call stored functions on MongoDB and retrieve the result set in a dynamic fashion. **Only working in MongoDB Version 3.x or below, as the eval functionality has been removed since**;
 
 - You may now specify a **connection timeout** (```conn-timeout```) at the Channel level (which must be set equal to MongoDBChannel) that will be used when building your MongoDB client instance. As of currently, a refactoring that will let you set run-time specific options at the mongodb-call level is being worked on.
+
+- Added ```rowset-builder``` attribute to mongodb-call node, similarly to what's been done in the dh-call. You can either output your document as plain JSON or in an XML schema.
+
+- Added ```create-index``` attribute to insert and update DBOs. Let's you create an index in the specified collection.
 
 New features and compatibility addresses are constantly being revised, so stay tuned!
