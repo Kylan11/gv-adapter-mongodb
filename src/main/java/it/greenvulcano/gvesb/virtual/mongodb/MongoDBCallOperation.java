@@ -121,13 +121,11 @@ public class MongoDBCallOperation implements CallOperation {
 
 	public String buildResult(String resultSet, String rowsetBuilder) {
 		if (rowsetBuilder.contentEquals("xml")) {
-			Object output = null;
 			try {
-				output = new JSONObject(resultSet);
+				return XML.toString(new JSONObject(resultSet), "Document");
 			} catch (JSONException e) {
-				output = new JSONArray(resultSet);
+				return XML.toString(new JSONArray(resultSet), "Document");
 			}
-			return XML.toString(output, "Document");
 		}
 		return resultSet;
 	}
